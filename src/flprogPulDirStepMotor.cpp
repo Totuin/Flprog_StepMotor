@@ -13,6 +13,7 @@ FLProgPulDirStepMotor::FLProgPulDirStepMotor(uint8_t pulPin, uint8_t dirPin)
         pinMode(_dirPin, OUTPUT);
     }
     calculatePulsePeriod();
+    calculateAccelerationPeriod();
     calculateCurrentSpeed();
 }
 
@@ -58,6 +59,14 @@ void FLProgPulDirStepMotor::tick()
     _pulseCounter = 0;
     _periodCounter = 0;
     _pullStatus = true;
+    if (_dir)
+    {
+        _currentStep++;
+    }
+    else
+    {
+        _currentStep--;
+    }
     if (_pulPin < 255)
     {
         if (_invertPulPin)
@@ -69,15 +78,15 @@ void FLProgPulDirStepMotor::tick()
             digitalWrite(_pulPin, true);
         }
     }
+    if (_mode == FLPROG_POSITION_TRANSITION_STEP_MOTOR_MODE)
+    {
+        checkTargetStep();
+    }
 }
 
-void FLProgPulDirStepMotor::dir(bool value)
+void FLProgPulDirStepMotor::reverseDir()
 {
-    if (dir == _dir)
-    {
-        return;
-    }
-    _dir = dir;
+    _dir = !_dir;
     if (!(_dirPin < 255))
     {
         return;
@@ -88,35 +97,6 @@ void FLProgPulDirStepMotor::dir(bool value)
         return;
     }
     digitalWrite(_dirPin, _dir);
-}
-
-void FLProgPulDirStepMotor::maxSpeed(uint16_t value)
-{
-    if (value == _maxSpeed)
-    {
-        return;
-    }
-    _maxSpeed = value;
-    calculateCurrentSpeed();
-}
-
-void FLProgPulDirStepMotor::acceleration(uint16_t value)
-{
-    if (value == _acceleration)
-    {
-        return;
-    }
-    _acceleration = value;
-}
-
-void FLProgPulDirStepMotor::tickPeriod(uint16_t value)
-{
-    if (value == _tickPeriod)
-    {
-        return;
-    }
-    _tickPeriod = value;
-    calculatePulsePeriod();
 }
 
 void FLProgPulDirStepMotor::pulseTime(uint16_t value)
@@ -143,6 +123,34 @@ void FLProgPulDirStepMotor::calculateCurrentSpeed()
     }
     if (_currenrSpeed == _maxSpeed)
     {
+        _accelerationMode = false;
         return;
     }
+    if (!_accelerationMode)
+    {
+        _accelerationMode = true;
+        _startAccelerationPeriodTime = millis();
+        return;
+    }
+    if (!RT_HW_Base.getIsTimerMs(_startAccelerationPeriodTime, _accelerationPeriod))
+    {
+        return;
+    }
+    _startAccelerationPeriodTime = millis();
+    if (_currenrSpeed == 0)
+    {
+        _currenrSpeed = 1;
+    }
+    else
+    {
+        if (_currenrSpeed < _maxSpeed)
+        {
+            _currenrSpeed++;
+        }
+        else
+        {
+            _currenrSpeed--;
+        }
+    }
+    _workPeriod = (uint16_t)((1000000.0 / (_currenrSpeed)) / _tickPeriod);
 }
