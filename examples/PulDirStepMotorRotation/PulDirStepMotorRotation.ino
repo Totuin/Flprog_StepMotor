@@ -5,7 +5,6 @@ STM32Timer FLProg_ITimer_1(TIM1);
 FLProgPulDirStepMotor motor((RT_HW_Base.getPinDOT(0)), (RT_HW_Base.getPinDOT(1)));
 
 uint32_t changeModeTime;
-bool currentDir = true;
 uint8_t currentMode = FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE;
 
 void setup()
@@ -14,10 +13,9 @@ void setup()
   changeModeTime = millis();
   motor.pulseTime(20);
   motor.tickPeriod(10);
-  motor.acceleration(400);
-  motor.maxSpeed(1100);
+  motor.acceleration(20000);
+  motor.maxSpeed(20000);
   motor.mode(currentMode);
-  motor.dir(currentDir);
 }
 
 void loop()
@@ -30,13 +28,12 @@ void loop()
     {
       currentMode = FLPROG_STOP_STEP_MOTOR_MODE;
       motor.mode(currentMode);
+      motor.dir(!motor.dir());
     }
     else
     {
-      currentDir = !currentDir;
       currentMode = FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE;
       motor.mode(currentMode);
-      motor.dir(currentDir);
     }
   }
 }
@@ -45,4 +42,3 @@ void FLProg_ITimer_1_handler()
 {
   motor.tick();
 }
-

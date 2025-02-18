@@ -129,14 +129,14 @@ void FLProgPulDirStepMotor::calculateCurrentSpeed()
     if (!_accelerationMode)
     {
         _accelerationMode = true;
-        _startAccelerationPeriodTime = millis();
+        _startAccelerationPeriodTime = micros();
         return;
     }
-    if (!RT_HW_Base.getIsTimerMs(_startAccelerationPeriodTime, _accelerationPeriod))
+    if (!RT_HW_Base.getIsTimerUs(_startAccelerationPeriodTime, _accelerationPeriod))
     {
         return;
     }
-    _startAccelerationPeriodTime = millis();
+    _startAccelerationPeriodTime = micros();
     if (_currenrSpeed == 0)
     {
         _currenrSpeed = 1;

@@ -33,12 +33,12 @@ void FLProgAbstractStepMotor::tickPeriod(uint16_t value)
 
 void FLProgAbstractStepMotor::calculateAccelerationPeriod()
 {
-    _accelerationPeriod = (uint16_t)(1000.0 / _acceleration);
+    _accelerationPeriod = (uint16_t)(1000000.0 / _acceleration);
 }
 
 void FLProgAbstractStepMotor::dir(bool value)
 {
-    if (_mode != FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE)
+    if (!((_mode == FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE)||(_mode == FLPROG_STOP_STEP_MOTOR_MODE)))
     {
         return;
     }
@@ -46,6 +46,8 @@ void FLProgAbstractStepMotor::dir(bool value)
     {
         return;
     }
+    _currenrSpeed = 0;
+    calculateCurrentSpeed();
     reverseDir();
 }
 

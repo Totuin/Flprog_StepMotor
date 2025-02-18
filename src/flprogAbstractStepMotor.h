@@ -12,7 +12,8 @@ public:
     void maxSpeed(uint16_t value);     // Максимальная скорость вращения - шаги в секунду
     void acceleration(uint16_t value); // ускорение - на сколько шагов в секунду увеличится скорость вращения во времени
     void tickPeriod(uint16_t value);   // Период вызова прерывания во внешнем таймере  в микросекундах
-    void dir(bool value); // Направление вращения
+    void dir(bool value);              // Направление вращения
+    bool dir() { return _dir; };
 
     uint16_t maxSpeed() { return _maxSpeed; };
     uint16_t acceleration() { return _acceleration; };
@@ -29,13 +30,13 @@ protected:
     void checkTargetStep();
     virtual void calculatePulsePeriod() {};
     virtual void calculateCurrentSpeed() {};
-    virtual void reverseDir(){};
+    virtual void reverseDir() {};
     uint16_t _currenrSpeed = 0;
     uint16_t _accelerationPeriod = 0;
     uint32_t _startAccelerationPeriodTime;
     bool _accelerationMode = false;
     uint16_t _maxSpeed = 10;
-    uint16_t _acceleration = 50;
+    uint16_t _acceleration = 1000;
     uint16_t _tickPeriod = 10;
     uint8_t _mode = FLPROG_STOP_STEP_MOTOR_MODE;
     int32_t _currentStep = 0;
