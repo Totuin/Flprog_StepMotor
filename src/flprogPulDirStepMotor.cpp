@@ -1,9 +1,10 @@
 #include "flprogPulDirStepMotor.h"
 
-FLProgPulDirStepMotor::FLProgPulDirStepMotor(uint8_t pulPin, uint8_t dirPin)
+FLProgPulDirStepMotor::FLProgPulDirStepMotor(uint8_t pulPin, uint8_t dirPin, uint8_t zeroSensorPin)
 {
     _pulPin = pulPin;
     _dirPin = dirPin;
+    _zeroSensorPin = zeroSensorPin;
     if (_pulPin < 255)
     {
         pinMode(_pulPin, OUTPUT);
@@ -11,6 +12,10 @@ FLProgPulDirStepMotor::FLProgPulDirStepMotor(uint8_t pulPin, uint8_t dirPin)
     if (_dirPin < 255)
     {
         pinMode(_dirPin, OUTPUT);
+    }
+    if (_zeroSensorPin < 255)
+    {
+        pinMode(_zeroSensorPin, INPUT);
     }
     calculatePulsePeriod();
     calculateAccelerationPeriod();
@@ -67,6 +72,44 @@ void FLProgPulDirStepMotor::tick()
     {
         _currentStep--;
     }
+    if (_mode == FLPROG_POSITION_TRANSITION_STEP_MOTOR_MODE)
+    {
+        if (_currentStep == _targetStep)
+        {
+            _workStatus = false;
+        }
+    }
+    if (_mode == FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE)
+    {
+        if (_goStepCounter == 0)
+        {
+            _workStatus = false;
+        }
+        else
+        {
+            _goStepCounter--;
+        }
+    }
+    if (_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE)
+    {
+        if (_zeroSensorPin < 255)
+        {
+            if (_isInvertedZeroSensorPin)
+            {
+                if (digitalRead(_zeroSensorPin))
+                {
+                    _workStatus = false;
+                }
+            }
+            else
+            {
+                if (!digitalRead(_zeroSensorPin))
+                {
+                    _workStatus = false;
+                }
+            }
+        }
+    }
     if (_pulPin < 255)
     {
         if (_invertPulPin)
@@ -78,10 +121,6 @@ void FLProgPulDirStepMotor::tick()
             digitalWrite(_pulPin, true);
         }
     }
-    if (_mode == FLPROG_POSITION_TRANSITION_STEP_MOTOR_MODE)
-    {
-        checkTargetStep();
-    }
 }
 
 void FLProgPulDirStepMotor::reverseDir()
@@ -89,6 +128,7 @@ void FLProgPulDirStepMotor::reverseDir()
     _dir = !_dir;
     if (!(_dirPin < 255))
     {
+        delayMicroseconds(10);
         return;
     }
     if (_invertDirPin)
@@ -97,6 +137,7 @@ void FLProgPulDirStepMotor::reverseDir()
         return;
     }
     digitalWrite(_dirPin, _dir);
+    delayMicroseconds(10);
 }
 
 void FLProgPulDirStepMotor::pulseTime(uint16_t value)
@@ -111,16 +152,13 @@ void FLProgPulDirStepMotor::pulseTime(uint16_t value)
 
 void FLProgPulDirStepMotor::calculatePulsePeriod()
 {
-    _pulsePeriod = (uint16_t)(_pulseTime / _tickPeriod);
+    _pulsePeriod = (uint32_t)(_pulseTime / _tickPeriod);
 }
 
 void FLProgPulDirStepMotor::calculateCurrentSpeed()
 {
-    if (_maxSpeed == 0)
-    {
-        _workStatus = false;
-        return;
-    }
+    // _currenrSpeed = _maxSpeed;
+
     if (_currenrSpeed == _maxSpeed)
     {
         _accelerationMode = false;
@@ -130,6 +168,18 @@ void FLProgPulDirStepMotor::calculateCurrentSpeed()
     {
         _accelerationMode = true;
         _startAccelerationPeriodTime = micros();
+    }
+    if (_currenrSpeed == 0)
+    {
+        if (!(_maxSpeed > _startAccelerationSpeed))
+        {
+            _currenrSpeed = _maxSpeed;
+            _accelerationMode = false;
+            privateCalulateWorkPeriod();
+            return;
+        }
+        _currenrSpeed = _startAccelerationSpeed;
+        privateCalulateWorkPeriod();
         return;
     }
     if (!RT_HW_Base.getIsTimerUs(_startAccelerationPeriodTime, _accelerationPeriod))
@@ -137,20 +187,19 @@ void FLProgPulDirStepMotor::calculateCurrentSpeed()
         return;
     }
     _startAccelerationPeriodTime = micros();
-    if (_currenrSpeed == 0)
+    if (_currenrSpeed < _maxSpeed)
     {
-        _currenrSpeed = 1;
+        _currenrSpeed++;
     }
     else
     {
-        if (_currenrSpeed < _maxSpeed)
-        {
-            _currenrSpeed++;
-        }
-        else
-        {
-            _currenrSpeed--;
-        }
+        _currenrSpeed--;
     }
-    _workPeriod = (uint16_t)((1000000.0 / (_currenrSpeed)) / _tickPeriod);
+
+    privateCalulateWorkPeriod();
+}
+
+void FLProgPulDirStepMotor::privateCalulateWorkPeriod()
+{
+    _workPeriod = (uint32_t)((1000000.0 / (_currenrSpeed)) / _tickPeriod);
 }

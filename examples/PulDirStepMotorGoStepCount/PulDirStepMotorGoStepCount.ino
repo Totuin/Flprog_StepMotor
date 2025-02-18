@@ -5,7 +5,6 @@ STM32Timer FLProg_ITimer_1(TIM1);
 FLProgPulDirStepMotor motor((RT_HW_Base.getPinDOT(0)), (RT_HW_Base.getPinDOT(1)));
 
 uint32_t changeModeTime;
-int32_t currentStep = 10;
 
 void setup()
 {
@@ -16,9 +15,8 @@ void setup()
     motor.acceleration(100);
     motor.startAccelerationSpeed(500);
     motor.maxSpeed(1000);
-    motor.targetStep(currentStep);
-    motor.mode(FLPROG_POSITION_TRANSITION_STEP_MOTOR_MODE);
-    motor.invertDirPin(true) ;
+    motor.mode(FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE);
+    motor.invertDirPin(true);
     motor.invertPulPin(true);
 }
 
@@ -28,15 +26,8 @@ void loop()
     if (RT_HW_Base.getIsTimerMs(changeModeTime, 5000))
     {
         changeModeTime = millis();
-        if (currentStep < 0)
-        {
-            currentStep = 50;
-        }
-        else
-        {
-            currentStep = -50;
-        }
-        motor.targetStep(currentStep);
+        motor.dir(!motor.dir());
+        motor.goThroughSteps(50);
     }
 }
 

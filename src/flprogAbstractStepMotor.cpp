@@ -2,6 +2,11 @@
 
 void FLProgAbstractStepMotor::maxSpeed(uint16_t value)
 {
+    if (value == 0)
+    {
+        mode(FLPROG_STOP_STEP_MOTOR_MODE);
+        return;
+    }
     if (value == _maxSpeed)
     {
         return;
@@ -36,9 +41,18 @@ void FLProgAbstractStepMotor::calculateAccelerationPeriod()
     _accelerationPeriod = (uint16_t)(1000000.0 / _acceleration);
 }
 
+bool FLProgAbstractStepMotor::canExternalChangeDir()
+{
+    if (_mode == FLPROG_POSITION_TRANSITION_STEP_MOTOR_MODE)
+    {
+        return false;
+    }
+    return true;
+}
+
 void FLProgAbstractStepMotor::dir(bool value)
 {
-    if (!((_mode == FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE)||(_mode == FLPROG_STOP_STEP_MOTOR_MODE)))
+    if (!canExternalChangeDir())
     {
         return;
     }
@@ -54,6 +68,15 @@ void FLProgAbstractStepMotor::dir(bool value)
 void FLProgAbstractStepMotor::setZeroStep()
 {
     _currentStep = 0;
+    if (_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE)
+    {
+        if (_workStatus)
+        {
+            _workStatus = false;
+            _currenrSpeed = 0;
+            calculateCurrentSpeed();
+        }
+    }
     checkTargetStep();
 }
 
@@ -76,19 +99,18 @@ void FLProgAbstractStepMotor::checkTargetStep()
     }
     if (_targetStep == _currentStep)
     {
-        if (_workStatus)
-        {
-            _workStatus = false;
-            _currenrSpeed = 0;
-            calculateCurrentSpeed();
-        }
+        _currenrSpeed = 0;
+        calculateCurrentSpeed();
         return;
     }
+    _workStatus = true;
     if (_dir)
     {
         if (_targetStep < _currentStep)
         {
             reverseDir();
+            _currenrSpeed = 0;
+            calculateCurrentSpeed();
         }
     }
     else
@@ -96,9 +118,10 @@ void FLProgAbstractStepMotor::checkTargetStep()
         if (_targetStep > _currentStep)
         {
             reverseDir();
+            _currenrSpeed = 0;
+            calculateCurrentSpeed();
         }
     }
-    _workStatus = true;
 }
 
 void FLProgAbstractStepMotor::mode(uint8_t value)
@@ -108,7 +131,11 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
         return;
     }
     _mode = value;
-    if (_mode == FLPROG_STOP_STEP_MOTOR_MODE)
+    if (_mode != FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE)
+    {
+        _goStepCounter = 0;
+    }
+    if ((_mode == FLPROG_STOP_STEP_MOTOR_MODE) || (_mode == FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE))
     {
         if (_workStatus)
         {
@@ -118,7 +145,7 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
         }
         return;
     }
-    if (_mode == FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE)
+    if ((_mode == FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE) || (_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE))
     {
         if (!_workStatus)
         {
@@ -130,4 +157,23 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
     }
     checkTargetStep();
     calculateCurrentSpeed();
+}
+
+void FLProgAbstractStepMotor::goThroughSteps(uint32_t value)
+{
+    if (_mode != FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE)
+    {
+        return;
+    }
+    if (value == 0)
+    {
+        return;
+    }
+    if (_goStepCounter == 0)
+    {
+        _currenrSpeed = 0;
+        calculateCurrentSpeed();
+    }
+    _goStepCounter = _goStepCounter + value;
+    _workStatus = true;
 }

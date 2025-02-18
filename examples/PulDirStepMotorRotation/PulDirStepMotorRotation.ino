@@ -13,26 +13,29 @@ void setup()
   changeModeTime = millis();
   motor.pulseTime(20);
   motor.tickPeriod(10);
-  motor.acceleration(20000);
-  motor.maxSpeed(20000);
+  motor.acceleration(100);
+  motor.startAccelerationSpeed(500);
+  motor.maxSpeed(1000);
   motor.mode(currentMode);
+  motor.invertDirPin(true) ;
+  motor.invertPulPin(true);
 }
 
 void loop()
 {
   motor.pool();
-  if (RT_HW_Base.getIsTimerMs(changeModeTime, 10000))
+  if (RT_HW_Base.getIsTimerMs(changeModeTime, 5000))
   {
     changeModeTime = millis();
     if (currentMode == FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE)
     {
       currentMode = FLPROG_STOP_STEP_MOTOR_MODE;
       motor.mode(currentMode);
-      motor.dir(!motor.dir());
     }
     else
     {
       currentMode = FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE;
+      motor.dir(!motor.dir());
       motor.mode(currentMode);
     }
   }
