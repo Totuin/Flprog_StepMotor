@@ -1,0 +1,38 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+#######################################
+# # Datatypes (KEYWORD1)
+#######################################
+FLProgAbstractStepMotor	KEYWORD1
+FLProgPulDirStepMotor	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+acceleration	KEYWORD2
+currenrSpeed	KEYWORD2
+currentStep	KEYWORD2
+dir	KEYWORD2
+goThroughSteps	KEYWORD2
+invertDirPin	KEYWORD2
+invertPulPin	KEYWORD2
+invertZeroSensorPin	KEYWORD2
+maxSpeed	KEYWORD2
+mode	KEYWORD2
+pool	KEYWORD2
+pulseTime	KEYWORD2
+setZeroStep	KEYWORD2
+startAccelerationSpeed	KEYWORD2
+targetStep	KEYWORD2
+tick	KEYWORD2
+tickPeriod	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE	LITERAL1
+FLPROG_FIND_ZERO_STEP_MOTOR_MODE	LITERAL1
+FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE	LITERAL1
+FLPROG_POSITION_TRANSITION_STEP_MOTOR_MODE	LITERAL1
+FLPROG_STOP_STEP_MOTOR_MODE	LITERAL1
