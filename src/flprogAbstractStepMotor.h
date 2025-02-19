@@ -21,8 +21,6 @@
 #define FLPROG_FIND_ZERO_STEP_MOTOR_STATUS 7
 #define FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS 8
 
-
-
 class FLProgAbstractStepMotor : public AbstractFLProgClass
 {
 public:
@@ -55,13 +53,19 @@ public:
 
     void invertZeroSensorPin(bool value) { _isInvertedZeroSensorPin = value; };
 
+    void pool();
+
 protected:
     void calculateAccelerationPeriod();
+    void calculateCurrentSpeed();
     void checkTargetStep();
-    virtual void calculatePulsePeriod() {};
-    virtual void calculateCurrentSpeed() {};
-    virtual void reverseDir() {};
     bool canExternalChangeDir();
+    void privateCalulateWorkPeriod();
+    void initZeroZeroSensorPin(char zeroSensorPinPullMode);
+
+    virtual void calculatePulsePeriod() {};
+    virtual void reverseDir() {};
+
     uint16_t _currenrSpeed = 0;
     uint32_t _accelerationPeriod = 0;
     uint16_t _startAccelerationSpeed = 100;
@@ -78,4 +82,6 @@ protected:
     bool _dir = false;
     uint8_t _zeroSensorPin = 255;
     bool _isInvertedZeroSensorPin = false;
+    uint32_t _workPeriod;
+    uint32_t _periodCounter = 0;
 };

@@ -198,3 +198,70 @@ void FLProgAbstractStepMotor::goThroughSteps(uint32_t value)
     _goStepCounter = _goStepCounter + value;
     _workStatus = true;
 }
+
+void FLProgAbstractStepMotor::pool()
+{
+    setFlags();
+    calculateCurrentSpeed();
+}
+
+void FLProgAbstractStepMotor::privateCalulateWorkPeriod()
+{
+    _workPeriod = (uint32_t)((1000000.0 / (_currenrSpeed)) / _tickPeriod);
+}
+
+void FLProgAbstractStepMotor::calculateCurrentSpeed()
+{
+    if (_currenrSpeed == _maxSpeed)
+    {
+        _accelerationMode = false;
+        return;
+    }
+    if (!_accelerationMode)
+    {
+        _accelerationMode = true;
+        _startAccelerationPeriodTime = micros();
+    }
+    if (_currenrSpeed == 0)
+    {
+        if (!(_maxSpeed > _startAccelerationSpeed))
+        {
+            _currenrSpeed = _maxSpeed;
+            _accelerationMode = false;
+            privateCalulateWorkPeriod();
+            return;
+        }
+        _currenrSpeed = _startAccelerationSpeed;
+        privateCalulateWorkPeriod();
+        return;
+    }
+    if (!RT_HW_Base.getIsTimerUs(_startAccelerationPeriodTime, _accelerationPeriod))
+    {
+        return;
+    }
+    _startAccelerationPeriodTime = micros();
+    if (_currenrSpeed < _maxSpeed)
+    {
+        _currenrSpeed++;
+    }
+    else
+    {
+        _currenrSpeed--;
+    }
+
+    privateCalulateWorkPeriod();
+}
+
+void FLProgAbstractStepMotor::initZeroZeroSensorPin(char zeroSensorPinPullMode)
+{
+    if (_zeroSensorPin == 255)
+    {
+        return;
+    }
+    if (zeroSensorPinPullMode == FLPROG_PULL_UP_MODE)
+    {
+        pinMode(_zeroSensorPin, INPUT_PULLUP);
+        return;
+    }
+    pinMode(_zeroSensorPin, INPUT);
+}
