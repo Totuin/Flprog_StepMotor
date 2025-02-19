@@ -1,4 +1,5 @@
 #include "flprogPulDirStepMotor.h"
+#include "RT_HW_CONSOLE.h"
 #include "STM32TimerInterrupt.h"
 
 STM32Timer FLProg_ITimer_1(TIM1);
@@ -9,7 +10,10 @@ FlprogBounceDiscreteInputPin dirPin((RT_HW_Base.getPinDIN(3)), FLPROG_PULL_NOT_M
 
 void setup()
 {
-
+    if (RT_HW_Base.uartCheckNum(1))
+    {
+        RT_HW_console.dev.numUart = 1;
+    }
     externalZeroPin.setPeriod(53);
     restartFind.setPeriod(53);
     dirPin.setPeriod(53);
@@ -47,6 +51,37 @@ void loop()
         motor.mode(FLPROG_STOP_STEP_MOTOR_MODE);
     }
     motor.dir(dirPin.digitalRead());
+    printStatus();
+}
+
+void printStatus()
+{
+    if (!motor.getIsChangeStatusWithReset())
+    {
+        return;
+    }
+    uint8_t motorStatus = motor.getStatus();
+    if (motorStatus == FLPROG_STOP_STEP_MOTOR_STATUS)
+    {
+        if (RT_HW_console.getOk())
+        {
+            RT_HW_console.outHead(String(F("Motor Stop!")), '=');
+        }
+    }
+    if (motorStatus == FLPROG_FIND_ZERO_STEP_MOTOR_STATUS)
+    {
+        if (RT_HW_console.getOk())
+        {
+            RT_HW_console.outHead(String(F("Motor Find Zero!")), '=');
+        }
+    }
+    if (motorStatus == FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS)
+    {
+        if (RT_HW_console.getOk())
+        {
+            RT_HW_console.outHead(String(F("Motor Find Zero OK!")), '=');
+        }
+    }
 }
 
 void FLProg_ITimer_1_handler()

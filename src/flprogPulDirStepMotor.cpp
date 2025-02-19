@@ -20,10 +20,12 @@ FLProgPulDirStepMotor::FLProgPulDirStepMotor(uint8_t pulPin, uint8_t dirPin, uin
     calculatePulsePeriod();
     calculateAccelerationPeriod();
     calculateCurrentSpeed();
+    _status = FLPROG_STOP_STEP_MOTOR_STATUS;
 }
 
 void FLProgPulDirStepMotor::pool()
 {
+    setFlags();
     calculateCurrentSpeed();
 }
 
@@ -77,6 +79,7 @@ void FLProgPulDirStepMotor::tick()
         if (_currentStep == _targetStep)
         {
             _workStatus = false;
+            _status = FLPROG_POSITION_TRANSITION_WAIT_COMMAND_STEP_MOTOR_STATUS;
         }
     }
     if (_mode == FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE)
@@ -84,6 +87,7 @@ void FLProgPulDirStepMotor::tick()
         if (_goStepCounter == 0)
         {
             _workStatus = false;
+            _status = FLPROG_GO_STEP_COUNT_STEP_WAIT_COMMAND_STEP_MOTOR_STATUS;
         }
         else
         {
@@ -99,6 +103,7 @@ void FLProgPulDirStepMotor::tick()
                 if (digitalRead(_zeroSensorPin))
                 {
                     _workStatus = false;
+                    _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
                 }
             }
             else
@@ -106,6 +111,7 @@ void FLProgPulDirStepMotor::tick()
                 if (!digitalRead(_zeroSensorPin))
                 {
                     _workStatus = false;
+                    _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
                 }
             }
         }
@@ -157,8 +163,6 @@ void FLProgPulDirStepMotor::calculatePulsePeriod()
 
 void FLProgPulDirStepMotor::calculateCurrentSpeed()
 {
-    // _currenrSpeed = _maxSpeed;
-
     if (_currenrSpeed == _maxSpeed)
     {
         _accelerationMode = false;

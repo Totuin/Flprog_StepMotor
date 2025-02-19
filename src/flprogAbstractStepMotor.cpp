@@ -5,6 +5,7 @@ void FLProgAbstractStepMotor::maxSpeed(uint16_t value)
     if (value == 0)
     {
         mode(FLPROG_STOP_STEP_MOTOR_MODE);
+        _status = FLPROG_STOP_STEP_MOTOR_STATUS;
         return;
     }
     if (value == _maxSpeed)
@@ -72,6 +73,7 @@ void FLProgAbstractStepMotor::setZeroStep()
     {
         if (_workStatus)
         {
+            _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
             _workStatus = false;
             _currenrSpeed = 0;
             calculateCurrentSpeed();
@@ -103,6 +105,7 @@ void FLProgAbstractStepMotor::checkTargetStep()
         calculateCurrentSpeed();
         return;
     }
+    _status = FLPROG_POSITION_TRANSITION_EXECUTE_COMMAND_STEP_MOTOR_STATUS;
     _workStatus = true;
     if (_dir)
     {
@@ -139,6 +142,14 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
     {
         if (_workStatus)
         {
+            if (_mode == FLPROG_STOP_STEP_MOTOR_MODE)
+            {
+                _status = FLPROG_STOP_STEP_MOTOR_STATUS;
+            }
+            if (_mode == FLPROG_GO_STEP_COUNT_STEP_MOTOR_MODE)
+            {
+                _status = FLPROG_GO_STEP_COUNT_STEP_WAIT_COMMAND_STEP_MOTOR_STATUS;
+            }
             _workStatus = false;
             _currenrSpeed = 0;
             calculateCurrentSpeed();
@@ -149,12 +160,21 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
     {
         if (!_workStatus)
         {
+            if (_mode == FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_MODE)
+            {
+                _status = FLPROG_CONTINUOUS_ROTATION_STEP_MOTOR_STATUS;
+            }
+            if (_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE)
+            {
+                _status = FLPROG_FIND_ZERO_STEP_MOTOR_STATUS;
+            }
             _workStatus = true;
             _currenrSpeed = 0;
             calculateCurrentSpeed();
         }
         return;
     }
+    _status = FLPROG_POSITION_TRANSITION_WAIT_COMMAND_STEP_MOTOR_STATUS;
     checkTargetStep();
     calculateCurrentSpeed();
 }
@@ -174,6 +194,7 @@ void FLProgAbstractStepMotor::goThroughSteps(uint32_t value)
         _currenrSpeed = 0;
         calculateCurrentSpeed();
     }
+    _status = FLPROG_GO_STEP_COUNT_STEP_EXECUTE_COMMAND_STEP_MOTOR_STATUS;
     _goStepCounter = _goStepCounter + value;
     _workStatus = true;
 }
