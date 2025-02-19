@@ -10,81 +10,75 @@ FlprogBounceDiscreteInputPin dirPin((RT_HW_Base.getPinDIN(3)), FLPROG_PULL_NOT_M
 
 void setup()
 {
-    if (RT_HW_Base.uartCheckNum(1))
-    {
-        RT_HW_console.dev.numUart = 1;
-    }
-    externalZeroPin.setPeriod(53);
-    restartFind.setPeriod(53);
-    dirPin.setPeriod(53);
+  RT_HW_console.dev.numUart = 1;
+  externalZeroPin.setPeriod(53);
+  restartFind.setPeriod(53);
+  dirPin.setPeriod(53);
 
-    externalZeroPin.digitalRead();
-    restartFind.digitalRead();
-    dirPin.digitalRead();
+  externalZeroPin.digitalRead();
+  restartFind.digitalRead();
+  dirPin.digitalRead();
 
-    FLProg_ITimer_1.setInterval(10, FLProg_ITimer_1_handler);
-    motor.pulseTime(20);
-    motor.tickPeriod(10);
-    motor.acceleration(100);
-    motor.startAccelerationSpeed(500);
-    motor.maxSpeed(1000);
+  FLProg_ITimer_1.setInterval(10, FLProg_ITimer_1_handler);
+  motor.pulseTime(20);
+  motor.tickPeriod(10);
+  motor.acceleration(100);
+  motor.startAccelerationSpeed(500);
+  motor.maxSpeed(1000);
 
-    motor.mode(FLPROG_FIND_ZERO_STEP_MOTOR_MODE);
-    motor.invertDirPin(true);
-    motor.invertPulPin(true);
-    motor.invertZeroSensorPin(false);
+  motor.mode(FLPROG_FIND_ZERO_STEP_MOTOR_MODE);
+  motor.invertDirPin(true);
+  motor.invertPulPin(true);
+  motor.invertZeroSensorPin(false);
 }
 
 void loop()
 {
-    motor.pool();
-    if (!externalZeroPin.digitalRead())
-    {
-        motor.setZeroStep();
-    }
-    if (restartFind.digitalRead())
-    {
-        motor.mode(FLPROG_FIND_ZERO_STEP_MOTOR_MODE);
-    }
-    else
-    {
-        motor.mode(FLPROG_STOP_STEP_MOTOR_MODE);
-    }
-    motor.dir(dirPin.digitalRead());
-    printStatus();
+  motor.pool();
+  if (!externalZeroPin.digitalRead())
+  {
+    motor.setZeroStep();
+  }
+  if (restartFind.digitalRead())
+  {
+    motor.mode(FLPROG_FIND_ZERO_STEP_MOTOR_MODE);
+  }
+  else
+  {
+    motor.mode(FLPROG_STOP_STEP_MOTOR_MODE);
+  }
+  motor.dir(dirPin.digitalRead());
+  printStatus();
 }
 
 void printStatus()
 {
-    if (!motor.getIsChangeStatusWithReset())
-    {
-        return;
-    }
-    uint8_t motorStatus = motor.getStatus();
-    if (motorStatus == FLPROG_STOP_STEP_MOTOR_STATUS)
-    {
-        if (RT_HW_console.getOk())
-        {
-            RT_HW_console.outHead(String(F("Motor Stop!")), '=');
-        }
-    }
-    if (motorStatus == FLPROG_FIND_ZERO_STEP_MOTOR_STATUS)
-    {
-        if (RT_HW_console.getOk())
-        {
-            RT_HW_console.outHead(String(F("Motor Find Zero!")), '=');
-        }
-    }
-    if (motorStatus == FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS)
-    {
-        if (RT_HW_console.getOk())
-        {
-            RT_HW_console.outHead(String(F("Motor Find Zero OK!")), '=');
-        }
-    }
+  if (!motor.getIsChangeStatusWithReset())
+  {
+    return;
+  }
+  uint8_t motorStatus = motor.getStatus();
+  String statusString = "Not defines status!";
+  if (motorStatus == FLPROG_STOP_STEP_MOTOR_STATUS)
+  {
+    statusString = "Motor Stop!";
+  }
+  if (motorStatus == FLPROG_FIND_ZERO_STEP_MOTOR_STATUS)
+  {
+    statusString = "Motor Find Zero!";
+  }
+  if (motorStatus == FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS)
+  {
+    statusString = "Motor Find Zero OK!";
+  }
+  if (RT_HW_console.getOk  ())
+  {
+    RT_HW_console.outVar (statusString);
+    RT_HW_console.outCR (1);
+  }
 }
 
 void FLProg_ITimer_1_handler()
 {
-    motor.tick();
+  motor.tick();
 }

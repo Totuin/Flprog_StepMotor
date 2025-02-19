@@ -1,4 +1,5 @@
 #include "flprogPulDirStepMotor.h"
+#include "RT_HW_CONSOLE.h"
 #include "STM32TimerInterrupt.h"
 
 STM32Timer FLProg_ITimer_1(TIM1);
@@ -8,6 +9,7 @@ uint32_t changeModeTime;
 
 void setup()
 {
+    RT_HW_console.dev.numUart = 1;
     FLProg_ITimer_1.setInterval(10, FLProg_ITimer_1_handler);
     changeModeTime = millis();
     motor.pulseTime(20);
@@ -28,6 +30,34 @@ void loop()
         changeModeTime = millis();
         motor.dir(!motor.dir());
         motor.goThroughSteps(50);
+    }
+    printStatus();
+}
+
+void printStatus()
+{
+    if (!motor.getIsChangeStatusWithReset())
+    {
+        return;
+    }
+    uint8_t motorStatus = motor.getStatus();
+    String statusString = "Not defines status!";
+    if (motorStatus == FLPROG_STOP_STEP_MOTOR_STATUS)
+    {
+        statusString = "Motor Stop!";
+    }
+    if (motorStatus == FLPROG_GO_STEP_COUNT_STEP_WAIT_COMMAND_STEP_MOTOR_STATUS)
+    {
+        statusString = "Motor Wite Command To Go!";
+    }
+    if (motorStatus == FLPROG_GO_STEP_COUNT_STEP_EXECUTE_COMMAND_STEP_MOTOR_STATUS)
+    {
+        statusString = "Motor Execute Command To Go!";
+    }
+    if (RT_HW_console.getOk())
+    {
+        RT_HW_console.outVar(statusString);
+        RT_HW_console.outCR(1);
     }
 }
 
