@@ -1,19 +1,63 @@
 #include "flprogPulDirStepMotor.h"
+#include "flprogSystemHardwareTimer.h"
 #include "RT_HW_CONSOLE.h"
-#include "STM32TimerInterrupt.h"
 
-STM32Timer FLProg_ITimer_1(TIM1);
-FLProgPulDirStepMotor motor((RT_HW_Base.getPinDOT(0)), (RT_HW_Base.getPinDOT(1)));
+#ifdef RT_HW_PLC_CODE
+#define PULL_PIN RT_HW_Base.getPinDOT(0)
+#define DIR_PIN RT_HW_Base.getPinDOT(1)
+#define CONSOLE_UART 1
+#endif
+
+#ifndef PULL_PIN
+#ifdef RT_HW_CORE_STM32
+#define PULL_PIN PB10
+#define DIR_PIN PB11
+#define CONSOLE_UART 0
+#endif
+#endif
+
+#ifndef PULL_PIN
+#ifdef RT_HW_CORE_RP2040
+#error NOT SELECT PINS
+#endif
+#endif
+
+#ifndef PULL_PIN
+#ifdef RT_HW_CORE_ESP8266
+#define PULL_PIN 16 // D0
+#define DIR_PIN 5   // D1
+#define CONSOLE_UART 0
+#endif
+#endif
+
+#ifndef PULL_PIN
+#ifdef RT_HW_CORE_ESP32
+#define PULL_PIN 4
+#define DIR_PIN 5
+#define CONSOLE_UART 0
+#endif
+#endif
+
+#ifndef PULL_PIN
+#define PULL_PIN 8
+#define DIR_PIN 9
+#define CONSOLE_UART 0
+#endif
+
+FLProgPulDirStepMotor motor(PULL_PIN, DIR_PIN);
 
 uint32_t changeModeTime;
 
 void setup()
 {
-    RT_HW_console.dev.numUart = 1;
-    FLProg_ITimer_1.setInterval(10, FLProg_ITimer_1_handler);
+    initFlprogSystemTimer(FLProgTimerHandler);
+    setFlprogSystemTimerTickPeriod(10);
+
+    RT_HW_console.dev.numUart = CONSOLE_UART;
+
     changeModeTime = millis();
     motor.pulseTime(20);
-    motor.tickPeriod(10);
+    motor.tickPeriod(getFlprogSystemTimerTickPeriod());
     motor.acceleration(100);
     motor.startAccelerationSpeed(500);
     motor.maxSpeed(1000);
@@ -61,7 +105,7 @@ void printStatus()
     }
 }
 
-void FLProg_ITimer_1_handler()
+void FLProgTimerHandler()
 {
     motor.tick();
 }
