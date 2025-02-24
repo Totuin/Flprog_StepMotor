@@ -252,13 +252,18 @@ void FLProgAbstractStepMotor::calculateCurrentSpeed()
     privateCalulateWorkPeriod();
 }
 
-void FLProgAbstractStepMotor::initZeroZeroSensorPin(char zeroSensorPinPullMode)
+void FLProgAbstractStepMotor::setZeroSensorPin(uint8_t pin)
 {
+    if (_zeroSensorPin == pin)
+    {
+        return;
+    }
+    _zeroSensorPin = pin;
     if (_zeroSensorPin == 255)
     {
         return;
     }
-    if (zeroSensorPinPullMode == FLPROG_PULL_UP_MODE)
+    if (_zeroSensorPinPullMode == FLPROG_PULL_UP_MODE)
     {
         pinMode(_zeroSensorPin, INPUT_PULLUP);
         return;

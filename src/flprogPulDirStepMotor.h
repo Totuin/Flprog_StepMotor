@@ -11,6 +11,9 @@ public:
     void invertPulPin(bool value) { _invertPulPin = value; };
     void tick(); // функция которую необходимо вызвыть во внешнем прерывании таймера
 
+    void setPulPin(uint8_t pin);
+    void setDirPin(uint8_t pin);
+ 
 protected:
     virtual void calculatePulsePeriod();
     virtual void reverseDir();

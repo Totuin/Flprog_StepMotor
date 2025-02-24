@@ -16,6 +16,11 @@ public:
 
     void tick(); // функция которую необходимо вызвыть во внешнем прерывании таймера
 
+    void setIn1Pin(uint8_t pin);
+    void setIn2Pin(uint8_t pin);
+    void setIn3Pin(uint8_t pin);
+    void setIn4Pin(uint8_t pin);
+
 protected:
     virtual void reverseDir();
     void setStartStep();

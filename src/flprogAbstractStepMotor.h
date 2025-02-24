@@ -55,13 +55,14 @@ public:
 
     void pool();
 
+    void setZeroSensorPin(uint8_t pin);
+
 protected:
     void calculateAccelerationPeriod();
     void calculateCurrentSpeed();
     void checkTargetStep();
     bool canExternalChangeDir();
     void privateCalulateWorkPeriod();
-    void initZeroZeroSensorPin(char zeroSensorPinPullMode);
 
     virtual void calculatePulsePeriod() {};
     virtual void reverseDir() {};
@@ -81,6 +82,7 @@ protected:
     bool _workStatus = false;
     bool _dir = false;
     uint8_t _zeroSensorPin = 255;
+    char _zeroSensorPinPullMode = FLPROG_PULL_NOT_MODE;
     bool _isInvertedZeroSensorPin = false;
     uint32_t _workPeriod;
     uint32_t _periodCounter = 0;

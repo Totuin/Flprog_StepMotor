@@ -2,28 +2,12 @@
 
 FLProgFourWireControlledStepMotor::FLProgFourWireControlledStepMotor(uint8_t in1Pin, uint8_t in2Pin, uint8_t in3Pin, uint8_t in4Pin, uint8_t zeroSensorPin, char zeroSensorPinPullMode)
 {
-    _in1Pin = in1Pin;
-    _in2Pin = in2Pin;
-    _in3Pin = in3Pin;
-    _in4Pin = in4Pin;
-    _zeroSensorPin = zeroSensorPin;
-    if (_in1Pin < 255)
-    {
-        pinMode(_in1Pin, OUTPUT);
-    }
-    if (_in2Pin < 255)
-    {
-        pinMode(_in2Pin, OUTPUT);
-    }
-    if (_in3Pin < 255)
-    {
-        pinMode(_in3Pin, OUTPUT);
-    }
-    if (_in4Pin < 255)
-    {
-        pinMode(_in4Pin, OUTPUT);
-    }
-    initZeroZeroSensorPin(zeroSensorPinPullMode);
+    _zeroSensorPinPullMode = zeroSensorPinPullMode;
+    setIn1Pin(in1Pin);
+    setIn2Pin(in2Pin);
+    setIn3Pin(in3Pin);
+    setIn4Pin(in4Pin);
+    setZeroSensorPin(zeroSensorPin);
     calculateAccelerationPeriod();
     calculateCurrentSpeed();
     setStartStep();
@@ -294,4 +278,60 @@ void FLProgFourWireControlledStepMotor::tick()
         setIn1PinValue(true);
         return;
     }
+}
+
+void FLProgFourWireControlledStepMotor::setIn1Pin(uint8_t pin)
+{
+    if (_in1Pin == pin)
+    {
+        return;
+    }
+    _in1Pin = pin;
+    if (_in1Pin == 255)
+    {
+        return;
+    }
+    pinMode(_in1Pin, OUTPUT);
+}
+
+void FLProgFourWireControlledStepMotor::setIn2Pin(uint8_t pin)
+{
+    if (_in2Pin == pin)
+    {
+        return;
+    }
+    _in2Pin = pin;
+    if (_in2Pin == 255)
+    {
+        return;
+    }
+    pinMode(_in2Pin, OUTPUT);
+}
+
+void FLProgFourWireControlledStepMotor::setIn3Pin(uint8_t pin)
+{
+    if (_in3Pin == pin)
+    {
+        return;
+    }
+    _in3Pin = pin;
+    if (_in3Pin == 255)
+    {
+        return;
+    }
+    pinMode(_in3Pin, OUTPUT);
+}
+
+void FLProgFourWireControlledStepMotor::setIn4Pin(uint8_t pin)
+{
+    if (_in4Pin == pin)
+    {
+        return;
+    }
+    _in4Pin = pin;
+    if (_in4Pin == 255)
+    {
+        return;
+    }
+    pinMode(_in4Pin, OUTPUT);
 }

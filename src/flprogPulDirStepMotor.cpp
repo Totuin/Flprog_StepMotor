@@ -2,18 +2,10 @@
 
 FLProgPulDirStepMotor::FLProgPulDirStepMotor(uint8_t pulPin, uint8_t dirPin, uint8_t zeroSensorPin, char zeroSensorPinPullMode)
 {
-    _pulPin = pulPin;
-    _dirPin = dirPin;
-    _zeroSensorPin = zeroSensorPin;
-    if (_pulPin < 255)
-    {
-        pinMode(_pulPin, OUTPUT);
-    }
-    if (_dirPin < 255)
-    {
-        pinMode(_dirPin, OUTPUT);
-    }
-    initZeroZeroSensorPin(zeroSensorPinPullMode);
+    _zeroSensorPinPullMode = zeroSensorPinPullMode;
+    setPulPin(pulPin);
+    setDirPin(dirPin);
+    setZeroSensorPin(zeroSensorPin);
     calculatePulsePeriod();
     calculateAccelerationPeriod();
     calculateCurrentSpeed();
@@ -149,4 +141,32 @@ void FLProgPulDirStepMotor::pulseTime(uint16_t value)
 void FLProgPulDirStepMotor::calculatePulsePeriod()
 {
     _pulsePeriod = (uint32_t)(_pulseTime / _tickPeriod);
+}
+
+void FLProgPulDirStepMotor::setPulPin(uint8_t pin)
+{
+    if (_pulPin == pin)
+    {
+        return;
+    }
+    _pulPin = pin;
+    if (_pulPin == 255)
+    {
+        return;
+    }
+    pinMode(_pulPin, OUTPUT);
+}
+
+void FLProgPulDirStepMotor::setDirPin(uint8_t pin)
+{
+    if (_dirPin == pin)
+    {
+        return;
+    }
+    _dirPin = pin;
+    if (_dirPin == 255)
+    {
+        return;
+    }
+    pinMode(_dirPin, OUTPUT);
 }
