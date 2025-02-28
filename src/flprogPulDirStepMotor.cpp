@@ -41,6 +41,10 @@ void FLProgPulDirStepMotor::tick()
     {
         return;
     }
+    if (_currentSpeed == 0)
+    {
+        return;
+    }
     if (_periodCounter < _workPeriod)
     {
         _periodCounter++;
@@ -77,25 +81,31 @@ void FLProgPulDirStepMotor::tick()
             _goStepCounter--;
         }
     }
-    if (_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE)
+    if ((_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE) || (_isFullControlZeroSensorPin))
     {
         if (_zeroSensorPin < 255)
         {
+            _zeroSensorPinStatus = digitalRead(_zeroSensorPin);
             if (_isInvertedZeroSensorPin)
             {
-                if (digitalRead(_zeroSensorPin))
+                _zeroSensorPinStatus = !_zeroSensorPinStatus;
+            }
+            if (_zeroSensorPinStatus)
+            {
+                if (!_oldZeroSensorPinStatus)
                 {
-                    _workStatus = false;
-                    _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
+                    _oldZeroSensorPinStatus = true;
+                    _currentStep = 0;
+                    if (_mode == FLPROG_FIND_ZERO_STEP_MOTOR_MODE)
+                    {
+                        _workStatus = false;
+                        _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
+                    }
                 }
             }
             else
             {
-                if (!digitalRead(_zeroSensorPin))
-                {
-                    _workStatus = false;
-                    _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
-                }
+                _oldZeroSensorPinStatus = false;
             }
         }
     }
@@ -134,7 +144,12 @@ void FLProgPulDirStepMotor::pulseTime(uint16_t value)
     {
         return;
     }
-    _pulseTime = value;
+    uint16_t temp = value;
+    if (temp < 10)
+    {
+        temp = 10;
+    }
+    _pulseTime = temp;
     calculatePulsePeriod();
 }
 

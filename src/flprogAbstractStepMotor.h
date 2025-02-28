@@ -27,10 +27,10 @@ public:
     void maxSpeed(uint16_t value); // Максимальная скорость вращения - шаги в секунду
     uint16_t maxSpeed() { return _maxSpeed; };
 
-    uint16_t currenrSpeed() { return _currenrSpeed; }; // текущая скорость вращения шагов в секунду
+    uint16_t currenrSpeed(); // текущая скорость вращения шагов в секунду
 
-    void acceleration(uint16_t value); // ускорение - на сколько шагов в секунду увеличится скорость вращения во времени
-    uint16_t acceleration() { return _acceleration; };
+    void acceleration(int16_t value); // ускорение - на сколько шагов в секунду увеличится скорость вращения во времени
+    int16_t acceleration() { return _acceleration; };
 
     void startAccelerationSpeed(uint16_t value) { _startAccelerationSpeed = value; }; // Начальная скорость ускорения шагов в секунду
     uint16_t startAccelerationSpeed() { return _startAccelerationSpeed; };
@@ -43,6 +43,8 @@ public:
 
     void setZeroStep(); // установка текущего положения как нулевого шага. в режиме поиска нуля - останавливает поиск.
 
+    void setCurrentStep(int32_t step);
+
     void targetStep(int32_t value);                 // переход на определлённый шаг в режиме позиционирования по шагу.
     int32_t currentStep() { return _currentStep; }; // текущее положение в шагах
 
@@ -52,6 +54,8 @@ public:
     void goThroughSteps(uint32_t value); // команда на исполнение определённого количества шагов в режиме движения по количеству шагов
 
     void invertZeroSensorPin(bool value) { _isInvertedZeroSensorPin = value; };
+
+    void fullControlZeroSensorPin(bool value) { _isFullControlZeroSensorPin = value; };
 
     void pool();
 
@@ -63,17 +67,17 @@ protected:
     void checkTargetStep();
     bool canExternalChangeDir();
     void privateCalulateWorkPeriod();
-
+    void checkZeroSensorPinStatus();
     virtual void calculatePulsePeriod() {};
     virtual void reverseDir() {};
 
-    uint16_t _currenrSpeed = 0;
+    uint16_t _currentSpeed = 0;
     uint32_t _accelerationPeriod = 0;
     uint16_t _startAccelerationSpeed = 100;
     uint32_t _startAccelerationPeriodTime;
     bool _accelerationMode = false;
     uint16_t _maxSpeed = 10;
-    uint16_t _acceleration = 1000;
+    int16_t _acceleration = 1000;
     uint16_t _tickPeriod = 10;
     uint8_t _mode = FLPROG_STOP_STEP_MOTOR_MODE;
     int32_t _currentStep = 0;
@@ -84,6 +88,9 @@ protected:
     uint8_t _zeroSensorPin = 255;
     char _zeroSensorPinPullMode = FLPROG_PULL_NOT_MODE;
     bool _isInvertedZeroSensorPin = false;
+    bool _isFullControlZeroSensorPin = false;
+    bool _zeroSensorPinStatus = false;
+    bool _oldZeroSensorPinStatus = false;
     uint32_t _workPeriod;
     uint32_t _periodCounter = 0;
 };

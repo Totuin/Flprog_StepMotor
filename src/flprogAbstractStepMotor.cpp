@@ -2,12 +2,6 @@
 
 void FLProgAbstractStepMotor::maxSpeed(uint16_t value)
 {
-    if (value == 0)
-    {
-        mode(FLPROG_STOP_STEP_MOTOR_MODE);
-        _status = FLPROG_STOP_STEP_MOTOR_STATUS;
-        return;
-    }
     if (value == _maxSpeed)
     {
         return;
@@ -16,8 +10,13 @@ void FLProgAbstractStepMotor::maxSpeed(uint16_t value)
     calculateCurrentSpeed();
 }
 
-void FLProgAbstractStepMotor::acceleration(uint16_t value)
+void FLProgAbstractStepMotor::acceleration(int16_t value)
 {
+    if (value < 1)
+    {
+        _acceleration = 0;
+        return;
+    }
     if (value == _acceleration)
     {
         return;
@@ -39,6 +38,10 @@ void FLProgAbstractStepMotor::tickPeriod(uint16_t value)
 
 void FLProgAbstractStepMotor::calculateAccelerationPeriod()
 {
+    if (_acceleration < 1)
+    {
+        return;
+    }
     _accelerationPeriod = (uint16_t)(1000000.0 / _acceleration);
 }
 
@@ -61,7 +64,7 @@ void FLProgAbstractStepMotor::dir(bool value)
     {
         return;
     }
-    _currenrSpeed = 0;
+    _currentSpeed = 0;
     calculateCurrentSpeed();
     reverseDir();
 }
@@ -75,7 +78,7 @@ void FLProgAbstractStepMotor::setZeroStep()
         {
             _status = FLPROG_END_FIND_ZERO_STEP_MOTOR_STATUS;
             _workStatus = false;
-            _currenrSpeed = 0;
+            _currentSpeed = 0;
             calculateCurrentSpeed();
         }
     }
@@ -101,7 +104,7 @@ void FLProgAbstractStepMotor::checkTargetStep()
     }
     if (_targetStep == _currentStep)
     {
-        _currenrSpeed = 0;
+        _currentSpeed = 0;
         calculateCurrentSpeed();
         return;
     }
@@ -112,7 +115,7 @@ void FLProgAbstractStepMotor::checkTargetStep()
         if (_targetStep < _currentStep)
         {
             reverseDir();
-            _currenrSpeed = 0;
+            _currentSpeed = 0;
             calculateCurrentSpeed();
         }
     }
@@ -121,7 +124,7 @@ void FLProgAbstractStepMotor::checkTargetStep()
         if (_targetStep > _currentStep)
         {
             reverseDir();
-            _currenrSpeed = 0;
+            _currentSpeed = 0;
             calculateCurrentSpeed();
         }
     }
@@ -129,6 +132,10 @@ void FLProgAbstractStepMotor::checkTargetStep()
 
 void FLProgAbstractStepMotor::mode(uint8_t value)
 {
+    if (value > 4)
+    {
+        return;
+    }
     if (_mode == value)
     {
         return;
@@ -151,7 +158,7 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
                 _status = FLPROG_GO_STEP_COUNT_STEP_WAIT_COMMAND_STEP_MOTOR_STATUS;
             }
             _workStatus = false;
-            _currenrSpeed = 0;
+            _currentSpeed = 0;
             calculateCurrentSpeed();
         }
         return;
@@ -169,7 +176,7 @@ void FLProgAbstractStepMotor::mode(uint8_t value)
                 _status = FLPROG_FIND_ZERO_STEP_MOTOR_STATUS;
             }
             _workStatus = true;
-            _currenrSpeed = 0;
+            _currentSpeed = 0;
             calculateCurrentSpeed();
         }
         return;
@@ -191,47 +198,110 @@ void FLProgAbstractStepMotor::goThroughSteps(uint32_t value)
     }
     if (_goStepCounter == 0)
     {
-        _currenrSpeed = 0;
+        _currentSpeed = 0;
         calculateCurrentSpeed();
     }
     _status = FLPROG_GO_STEP_COUNT_STEP_EXECUTE_COMMAND_STEP_MOTOR_STATUS;
-    _goStepCounter = _goStepCounter + value;
+    _goStepCounter = _goStepCounter + value - 1;
     _workStatus = true;
+}
+
+void FLProgAbstractStepMotor::checkZeroSensorPinStatus()
+{
+    if (_zeroSensorPin == 255)
+    {
+        return;
+    }
+    bool temp = digitalRead(_zeroSensorPin);
+    if (_isInvertedZeroSensorPin)
+    {
+        temp = !temp;
+    }
+    if (!_workStatus)
+    {
+        if (temp)
+        {
+            if (!_oldZeroSensorPinStatus)
+            {
+                _oldZeroSensorPinStatus = true;
+                if (_isFullControlZeroSensorPin)
+                {
+                    _currentStep = 0;
+                }
+            }
+        }
+        else
+        {
+            _oldZeroSensorPinStatus = false;
+        }
+        return;
+    }
+    if (temp)
+    {
+        return;
+    }
+    _oldZeroSensorPinStatus = false;
 }
 
 void FLProgAbstractStepMotor::pool()
 {
     setFlags();
+    checkZeroSensorPinStatus();
+    checkTargetStep();
     calculateCurrentSpeed();
 }
 
 void FLProgAbstractStepMotor::privateCalulateWorkPeriod()
 {
-    _workPeriod = (uint32_t)((1000000.0 / (_currenrSpeed)) / _tickPeriod);
+    if (_currentSpeed == 0)
+    {
+        return;
+    }
+    _workPeriod = (uint32_t)((1000000.0 / (_currentSpeed)) / _tickPeriod);
 }
 
 void FLProgAbstractStepMotor::calculateCurrentSpeed()
 {
-    if (_currenrSpeed == _maxSpeed)
+    if (_currentSpeed == _maxSpeed)
     {
         _accelerationMode = false;
         return;
     }
+    if (_acceleration < 1)
+    {
+        _currentSpeed = _maxSpeed;
+        _accelerationMode = false;
+        privateCalulateWorkPeriod();
+        return;
+    }
+    if (_acceleration < 1)
+    {
+        _accelerationMode = false;
+    }
     if (!_accelerationMode)
     {
-        _accelerationMode = true;
-        _startAccelerationPeriodTime = micros();
-    }
-    if (_currenrSpeed == 0)
-    {
-        if (!(_maxSpeed > _startAccelerationSpeed))
+        if (_acceleration > 0)
         {
-            _currenrSpeed = _maxSpeed;
+            _accelerationMode = true;
+            _startAccelerationPeriodTime = micros();
+        }
+        else
+        {
+            _currentSpeed = _maxSpeed;
+            privateCalulateWorkPeriod();
+            return;
+        }
+    }
+    if (_currentSpeed == 0)
+    {
+        if (_maxSpeed <= _startAccelerationSpeed)
+        {
+            _currentSpeed = _maxSpeed;
             _accelerationMode = false;
             privateCalulateWorkPeriod();
             return;
         }
-        _currenrSpeed = _startAccelerationSpeed;
+        _currentSpeed = _startAccelerationSpeed;
         privateCalulateWorkPeriod();
         return;
     }
@@ -240,15 +310,14 @@ void FLProgAbstractStepMotor::calculateCurrentSpeed()
         return;
     }
     _startAccelerationPeriodTime = micros();
-    if (_currenrSpeed < _maxSpeed)
+    if (_currentSpeed < _maxSpeed)
     {
-        _currenrSpeed++;
+        _currentSpeed++;
     }
-    else
+    if (_currentSpeed > _maxSpeed)
     {
-        _currenrSpeed--;
+        _currentSpeed--;
     }
-
     privateCalulateWorkPeriod();
 }
 
@@ -268,5 +337,24 @@ void FLProgAbstractStepMotor::setZeroSensorPin(uint8_t pin)
         pinMode(_zeroSensorPin, INPUT_PULLUP);
         return;
     }
-    pinMode(_zeroSensorPin, INPUT);
+    else
+    {
+        pinMode(_zeroSensorPin, INPUT);
+    }
+    checkZeroSensorPinStatus();
+}
+
+uint16_t FLProgAbstractStepMotor::currenrSpeed()
+{
+    if (_workStatus)
+    {
+        return _currentSpeed;
+    }
+    return 0;
+}
+
+void FLProgAbstractStepMotor::setCurrentStep(int32_t step)
+{
+    _currentStep = step;
+    checkTargetStep();
 }
