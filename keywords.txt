@@ -15,6 +15,7 @@ acceleration	KEYWORD2
 currenrSpeed	KEYWORD2
 currentStep	KEYWORD2
 dir	KEYWORD2
+fullControlZeroSensorPin	KEYWORD2
 goThroughSteps	KEYWORD2
 invertDirPin	KEYWORD2
 invertPulPin	KEYWORD2
@@ -29,6 +30,14 @@ maxSpeed	KEYWORD2
 mode	KEYWORD2
 pool	KEYWORD2
 pulseTime	KEYWORD2
+setCurrentStep	KEYWORD2
+setDirPin	KEYWORD2
+setIn1Pin	KEYWORD2
+setIn2Pin	KEYWORD2
+setIn3Pin	KEYWORD2
+setIn4Pin	KEYWORD2
+setPulPin	KEYWORD2
+setZeroSensorPin	KEYWORD2
 setZeroStep	KEYWORD2
 startAccelerationSpeed	KEYWORD2
 targetStep	KEYWORD2
